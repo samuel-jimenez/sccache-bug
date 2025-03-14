@@ -1,0 +1,6 @@
+[build]
+# rustc-wrapper = "/usr/bin/sccache"
+# target-dir = "/run/media/samuel/games/.cargo/scc-test-lib"
+
+[env]
+LLVM_PROFILE_FILE = { value = "target/debug/coverage/default-%p-%8m.profraw", relative = true }

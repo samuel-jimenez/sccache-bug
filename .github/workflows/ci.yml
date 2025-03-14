@@ -1,0 +1,58 @@
+name: ci
+on: [ push, pull_request ]
+
+jobs:
+  test:
+    name: test ${{ matrix.os }} rust ${{ matrix.rustc || 'stable' }} ${{ matrix.extra_desc }}
+    runs-on: ${{ matrix.os }}
+    continue-on-error: ${{ matrix.allow_failure || false }}
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-22.04
+            rustc: "1.75.0"
+          - os: ubuntu-22.04
+            rustc: stable
+          - os: ubuntu-22.04
+            rustc: beta
+          - os: ubuntu-22.04
+            rustc: nightly
+          - os: ubuntu-24.04
+            rustc: "1.75.0"
+          - os: macos-13
+          - os: macos-14
+          - os: windows-2019
+            rustc: "1.75.0"
+          - os: windows-2019
+            rustc: nightly
+          - os: windows-2019
+            rustc: beta
+          - os: windows-2022
+            rustc: nightly
+          - os: windows-2022
+            rustc: beta
+    env:
+      RUST_BACKTRACE: 1
+      # RUSTC_WRAPPER: sccache
+    steps:
+      - uses: ilammy/msvc-dev-cmd@v1
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: Install rust
+        uses: ./.github/actions/rust-toolchain
+        with:
+          toolchain: ${{ matrix.rustc }}
+
+      - name: "`sccache` ~ install"
+        run: cargo install sccache
+
+      - name: which
+        run: which sccache
+
+      - name: Build
+        run: cargo build --locked --release
+
+
