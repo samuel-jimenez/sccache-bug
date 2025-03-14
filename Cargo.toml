@@ -1,0 +1,8 @@
+[package]
+name = "sccache-bug"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+redb = "2.4.0"
+zerocopy = { version = "0.7.32", features = ["derive"] }
