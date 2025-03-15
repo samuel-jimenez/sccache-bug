@@ -45,11 +45,9 @@ jobs:
         run: cargo install sccache
 
       - name: which
-        run: which sccache
+        run: echo "RUSTC_WRAPPER=$(which sccache)" >> $GITHUB_ENV
 
       - name: Build
         run: cargo build --locked --release
-        env:
-          RUSTC_WRAPPER: sccache
 
 
