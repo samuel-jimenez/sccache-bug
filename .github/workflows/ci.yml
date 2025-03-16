@@ -51,5 +51,6 @@ jobs:
         run: cargo build --locked --release
         env:
           RUSTC_WRAPPER: sccache
+          SCCACHE_LOG: debug
 
 
