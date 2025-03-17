@@ -20,7 +20,7 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v4
 
-      - name: "Install rust"
+      - name: "`rust` ~ install"
         uses: ./.github/actions/rust-toolchain
         with:
           toolchain: ${{ matrix.rustc }}
@@ -72,10 +72,10 @@ jobs:
         run: sccache --show-stats && sccache --dist-status
 
 
-      - name: Clean
+      - name: "Clean"
         run: cargo clean
 
-      - name: Build Sccache
+      - name: "Build"
         run: cargo build --locked --release
         env:
           RUSTC_WRAPPER: sccache
