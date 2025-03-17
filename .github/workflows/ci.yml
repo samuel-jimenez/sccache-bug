@@ -30,8 +30,8 @@ jobs:
         id: cache
         with:
           path: |
-            /usr/bin/sccache
-            /usr/bin/sccache-dist
+            sccache/target/release/sccache
+            sccache/target/release/sccache-dist
           key: ${{ runner.os }}-${{ matrix.rustc }}-sccache
           # key: ${{ matrix.os }}-${{ matrix.rustc }}-sccache
 
@@ -50,22 +50,25 @@ jobs:
           git clone $SCCACHE_URL
           cd sccache
           cargo build --locked --release --features=dist-server
-          sudo mv $SCCACHE_DIR/$SCCACHE_FILE $SCCACHE_DIR/$SCCACHE_DIST_FILE $BIN_DIR
         env:
           SCCACHE_URL: https://github.com/mozilla/sccache.git
-          SCCACHE_DIR: target/release
-          BIN_DIR: /usr/bin
-          SCCACHE_FILE: sccache
-          SCCACHE_DIST_FILE: sccache-dist
 
 
       - name: "`sccache` ~ save"
         uses: actions/cache/save@v4
         with:
           path: |
-            /usr/bin/sccache
-            /usr/bin/sccache-dist
+            sccache/target/release/sccache
+            sccache/target/release/sccache-dist
           key: ${{ steps.cache.outputs.cache-primary-key }}
+
+      - name: "`sccache` ~ install"
+        run: sudo mv $SCCACHE_DIR/$SCCACHE_FILE $SCCACHE_DIR/$SCCACHE_DIST_FILE $BIN_DIR
+        env:
+          SCCACHE_DIR: sccache/target/release
+          BIN_DIR: /usr/bin
+          SCCACHE_FILE: sccache
+          SCCACHE_DIST_FILE: sccache-dist
 
       - name: "`bwrap` ~ install"
         run: sudo apt install -y --no-install-recommends bubblewrap
