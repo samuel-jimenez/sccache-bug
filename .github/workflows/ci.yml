@@ -47,6 +47,7 @@ jobs:
           curl $SCCACHE_DIST_URL -Lo $SCCACHE_DIST_ARCHIVE
           tar --one-top-level -xvf $SCCACHE_ARCHIVE
           tar --one-top-level -xvf $SCCACHE_DIST_ARCHIVE
+          ls
           mv $SCCACHE_DIR/$SCCACHE_FILE $SCCACHE_FILE
           mv $SCCACHE_DIST_DIR/$SCCACHE_DIST_FILE $SCCACHE_DIST_FILE
         env:
