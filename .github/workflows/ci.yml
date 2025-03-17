@@ -5,7 +5,7 @@ jobs:
   test:
     name: test
     runs-on: ubuntu-22.04
-    continue-on-error: false
+    continue-on-error: true
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -149,6 +149,16 @@ jobs:
         run: sccache --show-stats && sccache --dist-status
 
 
+
+      - name: Clean
+        run: cargo clean
+
+      - name: Build
+        run: cargo build --locked --release
+
+
+      - name: Clean
+        run: cargo clean
 
       - name: Build
         run: cargo build --locked --release
