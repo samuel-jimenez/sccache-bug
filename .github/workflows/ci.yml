@@ -68,7 +68,8 @@ jobs:
 
       - name: "`sccache` ~ config"
         run: |
-          mkdir -p $HOME/.config/sccache /etc/conf.d/sccache
+          mkdir -p $HOME/.config/sccache
+          sudo mkdir -p /etc/conf.d/sccache
           echo '[cache.disk]
           dir = "'"$HOME/.cache/sccache"'"
           [dist]
