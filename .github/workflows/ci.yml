@@ -74,9 +74,7 @@ jobs:
           scheduler_url = "http://127.0.0.1:10500"
 
           [builder]
-          type = "overlay"
-          build_dir = "/tmp/build"
-          bwrap_path = "/usr/bin/bwrap"
+          type = "docker"
 
           [scheduler_auth]
           type = "token"
