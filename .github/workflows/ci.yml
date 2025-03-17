@@ -22,25 +22,7 @@ jobs:
           toolchain: stable
 
       - name: "`sccache` ~ install"
-        run: |
-          curl $SCCACHE_URL -Lo $SCCACHE_ARCHIVE
-          curl $SCCACHE_DIST_URL -Lo $SCCACHE_DIST_ARCHIVE
-          tar -xvf $SCCACHE_ARCHIVE
-          tar -xvf $SCCACHE_DIST_ARCHIVE
-          sudo mv $SCCACHE_DIR/$SCCACHE_FILE $SCCACHE_DIST_DIR/$SCCACHE_DIST_FILE $BIN_DIR
-          # mv $SCCACHE_DIR/$SCCACHE_FILE $BIN_DIR/$SCCACHE_FILE
-          # mv $SCCACHE_DIST_DIR/$SCCACHE_DIST_FILE $BIN_DIR/$SCCACHE_DIST_FILE
-          #echo "PATH=$(pwd)/$BIN_DIR:$PATH" >> $GITHUB_ENV
-        env:
-          SCCACHE_URL: https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-x86_64-unknown-linux-musl.tar.gz
-          SCCACHE_DIST_URL: https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-dist-v0.10.0-x86_64-unknown-linux-musl.tar.gz
-          SCCACHE_ARCHIVE: sccache.tar.gz
-          SCCACHE_DIST_ARCHIVE: sccache-dist.tar.gz
-          SCCACHE_DIR: sccache-v0.10.0-x86_64-unknown-linux-musl
-          SCCACHE_DIST_DIR: sccache-dist-v0.10.0-x86_64-unknown-linux-musl
-          BIN_DIR: /usr/bin
-          SCCACHE_FILE: sccache
-          SCCACHE_DIST_FILE: sccache-dist
+        run: cargo install sccache
 
 
       - name: "`bwrap` ~ install"
