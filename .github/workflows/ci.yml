@@ -158,11 +158,13 @@ jobs:
           sudo systemctl daemon-reload
 
 
-      - name: Start scheduler
-        run: sudo sccache-dist scheduler --config $HOME/.config/sccache/scheduler-config.toml
-        env:
-          # SCCACHE_NO_DAEMON: 1
-          SCCACHE_LOG: debug
+      - name: "`scheduler` start"
+        run: sudo systemctl start sccache-scheduler
+
+
+      - name: "`scheduler` status"
+        run: systemctl status sccache-scheduler
+
 
 
       - name: "`buildserver` start"
