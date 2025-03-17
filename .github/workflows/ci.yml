@@ -68,7 +68,7 @@ jobs:
 
       - name: "`sccache` ~ config"
         run: |
-          mkdir -p $HOME/.config/sccache
+          mkdir -p $HOME/.config/sccache /etc/conf.d/sccache
           echo '[cache.disk]
           dir = "'"$HOME/.cache/sccache"'"
           [dist]
@@ -110,8 +110,27 @@ jobs:
           [scheduler_auth]
           type = "token"
           token = "preshared token"
-           ' >  $HOME/.config/sccache/buildserver-config.toml
+           ' >  /etc/conf.d/sccache/buildserver-config.toml
 
+
+      - name: "`systemd` ~ config"
+        run: |
+          echo '
+          [Unit]
+          Description=sccache-dist buildserver
+          Wants=network-online.target
+          After=network-online.target
+
+          [Service]
+          Environment="SCCACHE_SYSLOG=info"
+          Environment="SCCACHE_NO_DAEMON=1"
+          Environment="RUST_BACKTRACE=1"
+          # EnvironmentFile=/etc/conf.d/sccache/sccache.conf
+          ExecStart=/usr/bin/sccache-dist server --config /etc/conf.d/sccache/buildserver-config.toml --syslog $SCCACHE_SYSLOG
+
+          [Install]
+          WantedBy=multi-user.target' >  /etc/systemd/system/sccache-buildserver.service
+          sudo systemctl daemon-reload
 
       - name: Start scheduler
         run: sudo sccache-dist scheduler --config $HOME/.config/sccache/scheduler-config.toml
@@ -121,7 +140,8 @@ jobs:
 
 
       - name: Start buildserver
-        run: sccache-dist server --config $HOME/.config/sccache/buildserver-config.toml
+        # run: sccache-dist server --config /etc/conf.d/sccache/buildserver-config.toml
+        run: sudo systemctl start sccache-buildserver
         env:
           # SCCACHE_NO_DAEMON: 1
           SCCACHE_LOG: debug
