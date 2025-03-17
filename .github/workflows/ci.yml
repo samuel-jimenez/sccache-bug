@@ -157,6 +157,8 @@ jobs:
 
           sudo systemctl daemon-reload
 
+      - name: "ip"
+        run: ip a
 
       - name: Start scheduler
         run: sudo sccache-dist scheduler --config $HOME/.config/sccache/scheduler-config.toml
