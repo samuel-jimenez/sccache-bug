@@ -27,9 +27,10 @@ jobs:
           curl $SCCACHE_DIST_URL -Lo $SCCACHE_DIST_ARCHIVE
           tar -xvf $SCCACHE_ARCHIVE
           tar -xvf $SCCACHE_DIST_ARCHIVE
-          # mv $SCCACHE_DIR/$SCCACHE_FILE $SCCACHE_FILE
-          mv $SCCACHE_DIST_DIR/$SCCACHE_DIST_FILE $SCCACHE_DIR/$SCCACHE_DIST_FILE
-          echo "PATH=$(pwd)/$SCCACHE_DIR:$PATH" >> $GITHUB_ENV
+          sudo mv $SCCACHE_DIR/$SCCACHE_FILE $SCCACHE_DIST_DIR/$SCCACHE_DIST_FILE $BIN_DIR
+          # mv $SCCACHE_DIR/$SCCACHE_FILE $BIN_DIR/$SCCACHE_FILE
+          # mv $SCCACHE_DIST_DIR/$SCCACHE_DIST_FILE $BIN_DIR/$SCCACHE_DIST_FILE
+          #echo "PATH=$(pwd)/$BIN_DIR:$PATH" >> $GITHUB_ENV
         env:
           SCCACHE_URL: https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-v0.10.0-x86_64-unknown-linux-musl.tar.gz
           SCCACHE_DIST_URL: https://github.com/mozilla/sccache/releases/download/v0.10.0/sccache-dist-v0.10.0-x86_64-unknown-linux-musl.tar.gz
@@ -37,16 +38,123 @@ jobs:
           SCCACHE_DIST_ARCHIVE: sccache-dist.tar.gz
           SCCACHE_DIR: sccache-v0.10.0-x86_64-unknown-linux-musl
           SCCACHE_DIST_DIR: sccache-dist-v0.10.0-x86_64-unknown-linux-musl
+          BIN_DIR: /usr/bin
           SCCACHE_FILE: sccache
           SCCACHE_DIST_FILE: sccache-dist
+
+
+      - name: "`bwrap` ~ install"
+        run: sudo apt install -y --no-install-recommends bubblewrap
 
       - name: "`sccache` ~ config"
         run: |
           mkdir -p $HOME/.config/sccache
+          sudo mkdir -p /etc/conf.d/sccache
           echo '[cache.disk]
-          dir = "'"$HOME/.cache/sccache"'"' >  $HOME/.config/sccache/config
+          dir = "'"$HOME/.cache/sccache"'"
+          [dist]
+          # where to find the scheduler
+          scheduler_url = "http://127.0.0.1:10500"
+          # a set of prepackaged toolchains
+          toolchains = []
+          # the maximum size of the toolchain cache in bytes
+          toolchain_cache_size = 5368709120
+          cache_dir = "'"$HOME/.cache/sccache-dist-client"'"
 
-          echo 'public_addr = "0.0.0.0:10500"' >  $HOME/.config/sccache/scheduler-config.toml
+          [dist.auth]
+          type = "token"
+          token = "preshared token"
+          ' >  $HOME/.config/sccache/config
+
+          echo 'public_addr = "0.0.0.0:10500"
+          [client_auth]
+          type = "token"
+          token = "preshared token"
+
+          [server_auth]
+          type = "token"
+          token = "preshared token"
+           ' >  $HOME/.config/sccache/scheduler-config.toml
+
+          echo '
+          cache_dir = "/tmp/toolchains"
+          public_addr = "127.0.0.1:10501"
+          bind_address = "0.0.0.0:10501"
+          scheduler_url = "http://127.0.0.1:10500"
+
+          [builder]
+          type = "overlay"
+          build_dir = "/tmp/build"
+          bwrap_path = "/usr/bin/bwrap"
+
+          [scheduler_auth]
+          type = "token"
+          token = "preshared token"
+           ' >  $HOME/.config/sccache/buildserver-config.toml
+
+          echo '
+          RUST_BACKTRACE=full
+          SCCACHE_SYSLOG=debug
+           ' >  $HOME/.config/sccache/sccache.conf
+
+          sudo cp $HOME/.config/sccache/* /etc/conf.d/sccache
+
+
+      - name: "`systemd` ~ config"
+        run: |
+          echo '
+          [Unit]
+          Description=sccache-dist buildserver
+          Wants=network-online.target
+          After=network-online.target
+
+          [Service]
+          Environment="SCCACHE_SYSLOG=info"
+          Environment="SCCACHE_NO_DAEMON=1"
+          Environment="RUST_BACKTRACE=1"
+          EnvironmentFile=/etc/conf.d/sccache/sccache.conf
+          ExecStart=/usr/bin/sccache-dist server --config /etc/conf.d/sccache/buildserver-config.toml --syslog $SCCACHE_SYSLOG
+
+          [Install]
+          WantedBy=multi-user.target' | sudo tee /etc/systemd/system/sccache-buildserver.service
+
+          echo '
+          [Unit]
+          Description=sccache-dist scheduler
+          Wants=network-online.target
+          After=network-online.target
+
+          [Service]
+          Environment="SCCACHE_SYSLOG=info"
+          Environment="SCCACHE_NO_DAEMON=1"
+          Environment="RUST_BACKTRACE=1"
+          EnvironmentFile=/etc/conf.d/sccache/sccache.conf
+          ExecStart=/usr/bin/sccache-dist scheduler --config /etc/conf.d/sccache/scheduler-config.toml --syslog $SCCACHE_SYSLOG
+
+          [Install]
+          WantedBy=multi-user.target' | sudo tee /etc/systemd/system/sccache-scheduler.service
+
+          sudo systemctl daemon-reload
+
+
+      - name: "`scheduler` start"
+        run: sudo systemctl start sccache-scheduler
+
+
+      - name: "`scheduler` status"
+        run: systemctl status sccache-scheduler
+
+
+
+      - name: "`buildserver` start"
+        run: sudo systemctl start sccache-buildserver
+
+
+      - name: "`buildserver` status"
+        run: systemctl status sccache-buildserver
+
+      - name: Test scheduler
+        run: sccache --show-stats && sccache --dist-status
 
 
 
@@ -56,4 +164,7 @@ jobs:
           RUSTC_WRAPPER: sccache
           SCCACHE_LOG: debug
 
+
+      - name: buildserver status
+        run: systemctl status sccache-buildserver
 
