@@ -87,6 +87,7 @@ jobs:
           token = "preshared token"
            ' >  $HOME/.config/sccache/scheduler-config.toml
 
+
           echo '
           cache_dir = "/tmp/toolchains"
           public_addr = "127.0.0.1:10501"
@@ -102,6 +103,20 @@ jobs:
           type = "token"
           token = "preshared token"
            ' >  $HOME/.config/sccache/buildserver-config.toml
+
+          echo '
+          cache_dir = "/tmp/toolchains"
+          public_addr = "127.0.0.1:10502"
+          bind_address = "0.0.0.0:10502"
+          scheduler_url = "http://127.0.0.1:10500"
+
+          [builder]
+          type = "docker"
+
+          [scheduler_auth]
+          type = "token"
+          token = "preshared token"
+           ' >  $HOME/.config/sccache/buildserver-docker-config.toml
 
           echo '
           RUST_BACKTRACE=full
@@ -129,6 +144,22 @@ jobs:
 
           [Install]
           WantedBy=multi-user.target' | sudo tee /etc/systemd/system/sccache-buildserver.service
+
+          echo '
+          [Unit]
+          Description=sccache-dist buildserver
+          Wants=network-online.target
+          After=network-online.target
+
+          [Service]
+          Environment="SCCACHE_SYSLOG=info"
+          Environment="SCCACHE_NO_DAEMON=1"
+          Environment="RUST_BACKTRACE=1"
+          EnvironmentFile=/etc/conf.d/sccache/sccache.conf
+          ExecStart=/usr/bin/sccache-dist server --config /etc/conf.d/sccache/buildserver-docker-config.toml --syslog $SCCACHE_SYSLOG
+
+          [Install]
+          WantedBy=multi-user.target' | sudo tee /etc/systemd/system/sccache-buildserver-docker.service
 
           echo '
           [Unit]
@@ -170,6 +201,7 @@ jobs:
 
 
 
+
       - name: Clean
         run: cargo clean
 
@@ -180,13 +212,43 @@ jobs:
       - name: Clean
         run: cargo clean
 
-      - name: Build
+      - name: Build Overlay
         run: cargo build --locked --release
         env:
           RUSTC_WRAPPER: sccache
           SCCACHE_LOG: debug
 
 
-      - name: buildserver status
+      - name: "`buildserver` status"
         run: systemctl status sccache-buildserver
+
+
+
+      - name: "`buildserver` start"
+        run: sudo systemctl stop sccache-buildserver
+
+      - name: "`buildserver` start"
+        run: sudo systemctl start sccache-buildserver-docker
+
+
+      - name: "`buildserver` status"
+        run: systemctl status sccache-buildserver-docker
+
+      - name: Test scheduler
+        run: sccache --show-stats && sccache --dist-status
+
+
+      - name: Clean
+        run: cargo clean
+
+      - name: Build Docker
+        run: cargo build --locked --release
+        env:
+          RUSTC_WRAPPER: sccache
+          SCCACHE_LOG: debug
+
+
+      - name: "`buildserver` status"
+        run: systemctl status sccache-buildserver-docker
+
 
