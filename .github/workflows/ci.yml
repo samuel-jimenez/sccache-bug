@@ -3,22 +3,16 @@ on: [ push, pull_request ]
 
 jobs:
   test:
-    name: test ${{ matrix.os }} rust ${{ matrix.rustc || 'stable' }} ${{ matrix.extra_desc }}
+    name: test ${{ matrix.os }} rust ${{ matrix.rustc || 'stable' }} ${{ matrix.buildserver }}
     runs-on: ${{ matrix.os }}
     continue-on-error: true
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - os: ubuntu-22.04
-            rustc: stable
-          - os: ubuntu-22.04
-            rustc: beta
-          - os: ubuntu-22.04
-            rustc: nightly
-          - os: ubuntu-24.04
-            rustc: stable
+        os: [ubuntu-22.04, ubuntu-24.04]
+        rustc: [stable, beta, nightly]
+        buildserver: [overlay, docker]
     env:
       RUST_BACKTRACE: 1
     steps:
@@ -133,7 +127,7 @@ jobs:
           ExecStart=/usr/bin/sccache-dist server --config /etc/conf.d/sccache/buildserver-config.toml --syslog $SCCACHE_SYSLOG
 
           [Install]
-          WantedBy=multi-user.target' | sudo tee /etc/systemd/system/sccache-buildserver.service
+          WantedBy=multi-user.target' | sudo tee /etc/systemd/system/sccache-buildserver-overlay.service
 
           echo '
           [Unit]
@@ -180,16 +174,14 @@ jobs:
 
 
       - name: "`buildserver` start"
-        run: sudo systemctl start sccache-buildserver
+        run: sudo systemctl start sccache-buildserver-${{ matrix.buildserver }}
 
 
       - name: "`buildserver` status"
-        run: systemctl status sccache-buildserver
+        run: systemctl status sccache-buildserver-${{ matrix.buildserver }}
 
       - name: Test scheduler
         run: sccache --show-stats && sccache --dist-status
-
-
 
 
       - name: Clean
@@ -202,43 +194,15 @@ jobs:
       - name: Clean
         run: cargo clean
 
-      - name: Build Overlay
+      - name: Build Sccache
         run: cargo build --locked --release
         env:
           RUSTC_WRAPPER: sccache
-          SCCACHE_LOG: debug
 
 
       - name: "`buildserver` status"
-        run: systemctl status sccache-buildserver
+        run: systemctl status sccache-buildserver-${{ matrix.buildserver }}
 
 
-
-      - name: "`buildserver` start"
-        run: sudo systemctl stop sccache-buildserver
-
-      - name: "`buildserver` start"
-        run: sudo systemctl start sccache-buildserver-docker
-
-
-      - name: "`buildserver` status"
-        run: systemctl status sccache-buildserver-docker
-
-      - name: Test scheduler
-        run: sccache --show-stats && sccache --dist-status
-
-
-      - name: Clean
-        run: cargo clean
-
-      - name: Build Docker
-        run: cargo build --locked --release
-        env:
-          RUSTC_WRAPPER: sccache
-          SCCACHE_LOG: debug
-
-
-      - name: "`buildserver` status"
-        run: systemctl status sccache-buildserver-docker
 
 
