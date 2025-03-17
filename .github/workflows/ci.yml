@@ -33,6 +33,7 @@ jobs:
             /usr/bin/sccache
             /usr/bin/sccache-dist
           key: ${{ runner.os }}-${{ matrix.rustc }}-sccache
+          # key: ${{ matrix.os }}-${{ matrix.rustc }}-sccache
 
 
 
@@ -57,6 +58,8 @@ jobs:
           SCCACHE_FILE: sccache
           SCCACHE_DIST_FILE: sccache-dist
 
+
+
       - name: "`bwrap` ~ install"
         run: sudo apt install -y --no-install-recommends bubblewrap
 
@@ -71,16 +74,11 @@ jobs:
 
 
       - name: "`buildserver` start"
-        run: |
-          sudo systemctl start sccache-buildserver-${{ matrix.buildserver }}
-          systemctl status sccache-buildserver-${{ matrix.buildserver }}
-
-
-      - name: "`buildserver` start"
         run: sudo systemctl start sccache-buildserver-${{ matrix.buildserver }}
 
 
       - name: "`buildserver` status"
+        if: always()
         run: systemctl status sccache-buildserver-${{ matrix.buildserver }}
 
 
