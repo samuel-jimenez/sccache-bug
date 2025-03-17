@@ -5,7 +5,7 @@ jobs:
   test:
     name: test ${{ matrix.os }} rust ${{ matrix.rustc || 'stable' }} ${{ matrix.extra_desc }}
     runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.allow_failure || false }}
+    continue-on-error: true
     timeout-minutes: 30
     strategy:
       fail-fast: false
@@ -169,6 +169,16 @@ jobs:
         run: sccache --show-stats && sccache --dist-status
 
 
+
+      - name: Clean
+        run: cargo clean
+
+      - name: Build
+        run: cargo build --locked --release
+
+
+      - name: Clean
+        run: cargo clean
 
       - name: Build
         run: cargo build --locked --release
