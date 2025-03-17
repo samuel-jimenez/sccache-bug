@@ -60,6 +60,8 @@ jobs:
           SCCACHE_FILE: sccache
           SCCACHE_DIST_FILE: sccache-dist
 
+      - run: which bwrap
+
       - name: "`sccache` ~ config"
         run: |
           mkdir -p $HOME/.config/sccache
@@ -89,6 +91,21 @@ jobs:
           token = "preshared token"
            ' >  $HOME/.config/sccache/scheduler-config.toml
 
+          echo '
+          cache_dir = "/tmp/toolchains"
+          public_addr = "127.0.0.1:10501"
+          bind_address = "0.0.0.0:10501"
+          scheduler_url = "http://127.0.0.1"
+
+          [builder]
+          type = "overlay"
+          build_dir = "/tmp/build"
+          bwrap_path = "/usr/bin/bwrap"
+
+          [scheduler_auth]
+          type = "token"
+          token = "preshared token"
+           ' >  $HOME/.config/sccache/buildserver-config.toml
 
 
       - name: Start scheduler
