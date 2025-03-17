@@ -94,7 +94,7 @@ jobs:
       - name: Start scheduler
         run: sccache-dist scheduler --config $HOME/.config/sccache/scheduler-config.toml
         env:
-          SCCACHE_NO_DAEMON: 1
+          # SCCACHE_NO_DAEMON: 1
           SCCACHE_LOG: debug
 
 
