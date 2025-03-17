@@ -22,7 +22,7 @@ jobs:
           toolchain: stable
 
       - name: "`sccache` ~ install"
-        run: cargo install sccache
+        run: cargo install sccache --features=dist-server
 
 
       - name: "`bwrap` ~ install"
