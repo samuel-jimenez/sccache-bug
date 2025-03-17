@@ -12,7 +12,7 @@ jobs:
       matrix:
         os: [ubuntu-24.04]
         rustc: [stable, beta, nightly]
-        buildserver: [overlay, docker]
+        buildserver: [local, overlay, docker]
     env:
       RUST_BACKTRACE: 1
     steps:
@@ -20,10 +20,18 @@ jobs:
       - name: Clone repository
         uses: actions/checkout@v4
 
-      - name: Install rust
+      - name: "Install rust"
         uses: ./.github/actions/rust-toolchain
         with:
           toolchain: ${{ matrix.rustc }}
+
+
+      - name: "`sccache` ~ config"
+        run: ./.github/conf.sh
+
+      - name: "`systemd` ~ config"
+        run: ./.github/systemd.sh
+
 
       - name: "`sccache` ~ install"
         run: |
@@ -41,12 +49,6 @@ jobs:
       - name: "`bwrap` ~ install"
         run: sudo apt install -y --no-install-recommends bubblewrap
 
-      - name: "`sccache` ~ config"
-        run: ./.github/conf.sh
-
-
-      - name: "`systemd` ~ config"
-        run: ./.github/systemd.sh
 
 
       - name: "`scheduler` start"
@@ -68,13 +70,6 @@ jobs:
 
       - name: "`scheduler` test"
         run: sccache --show-stats && sccache --dist-status
-
-
-      - name: Clean
-        run: cargo clean
-
-      - name: Build
-        run: cargo build --locked --release
 
 
       - name: Clean
