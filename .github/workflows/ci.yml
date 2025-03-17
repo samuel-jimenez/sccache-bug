@@ -22,8 +22,11 @@ jobs:
           toolchain: stable
 
       - name: "`sccache` ~ install"
-        run: cargo install sccache --features=dist-server
-
+        run: |
+          cargo install sccache --features=dist-server
+          sudo mv $(which sccache) $(which sccache-dist) $BIN_DIR
+        env:
+          BIN_DIR: /usr/bin
 
       - name: "`bwrap` ~ install"
         run: sudo apt install -y --no-install-recommends bubblewrap
