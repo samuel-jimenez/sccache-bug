@@ -111,7 +111,9 @@ jobs:
           [scheduler_auth]
           type = "token"
           token = "preshared token"
-           ' >  /etc/conf.d/sccache/buildserver-config.toml
+           ' >  $HOME/.config/sccache/buildserver-config.toml
+
+          sudo cp $HOME/.config/sccache/* /etc/conf.d/sccache
 
 
       - name: "`systemd` ~ config"
