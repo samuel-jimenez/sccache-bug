@@ -44,8 +44,15 @@ jobs:
       - name: "`sccache` ~ install"
         run: cargo install sccache
 
-      - name: which
-        run: which sccache
+      - name: "`sccache` ~ config"
+        run: |
+          mkdir -p $HOME/.config/sccache
+          echo '[cache.disk]
+          dir = "'"$HOME/.cache/sccache"'"' >  $HOME/.config/sccache/config
+
+          echo 'public_addr = "0.0.0.0:10500"' >  $HOME/.config/sccache/scheduler-config.toml
+
+
 
       - name: Build
         run: cargo build --locked --release
