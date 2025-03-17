@@ -42,7 +42,16 @@ jobs:
           toolchain: ${{ matrix.rustc }}
 
       - name: "`sccache` ~ install"
-        run: cargo install sccache
+        run: |
+          git clone $SCCACHE_URL
+          cd sccache
+          cargo build --locked --release
+          sudo mv $SCCACHE_DIR/$SCCACHE_FILE $BIN_DIR
+        env:
+          SCCACHE_URL: https://github.com/mozilla/sccache.git
+          SCCACHE_DIR: target/release
+          BIN_DIR: /usr/bin
+          SCCACHE_FILE: sccache
 
       - name: "`sccache` ~ config"
         run: |
