@@ -176,15 +176,6 @@ jobs:
         run: sccache --show-stats && sccache --dist-status
 
 
-      - name: "ip"
-        run: ip a
-
-      - name: "ping"
-        run: ping host.docker.internal
-
-      - name: "curl"
-        run: curl host.docker.internal
-
 
       - name: Build
         run: cargo build --locked --release
