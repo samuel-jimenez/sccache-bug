@@ -98,6 +98,9 @@ jobs:
           SCCACHE_LOG: debug
 
 
+      - name: Test scheduler
+        run: sccache --show-stats && sccache --dist-status
+
 
       - name: Build
         run: cargo build --locked --release
