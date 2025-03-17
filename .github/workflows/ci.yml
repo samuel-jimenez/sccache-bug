@@ -60,7 +60,12 @@ jobs:
           SCCACHE_FILE: sccache
           SCCACHE_DIST_FILE: sccache-dist
 
-      - run: which bwrap
+
+      - name: "`bwrap` ~ install"
+        run: sudo apt install -y --no-install-recommends bwrap
+
+      - name: "which bwrap"
+        run: which bwrap
 
       - name: "`sccache` ~ config"
         run: |
