@@ -3,32 +3,12 @@ on: [ push, pull_request ]
 
 jobs:
   test:
-    name: test ${{ matrix.os }} rust ${{ matrix.rustc || 'stable' }} ${{ matrix.extra_desc }}
-    runs-on: ${{ matrix.os }}
-    continue-on-error: ${{ matrix.allow_failure || false }}
+    name: test
+    runs-on: ubuntu-22.04
+    continue-on-error: false
     timeout-minutes: 30
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-22.04
-            rustc: stable
-          # - os: ubuntu-22.04
-          #   rustc: beta
-          # - os: ubuntu-22.04
-          #   rustc: nightly
-          # - os: ubuntu-24.04
-          #   rustc: stable
-          # - os: macos-13
-          # - os: macos-14
-          # - os: windows-2019
-          #   rustc: nightly
-          # - os: windows-2019
-          #   rustc: beta
-          # - os: windows-2022
-          #   rustc: nightly
-          # - os: windows-2022
-          #   rustc: beta
     env:
       RUST_BACKTRACE: 1
     steps:
@@ -39,7 +19,7 @@ jobs:
       - name: Install rust
         uses: ./.github/actions/rust-toolchain
         with:
-          toolchain: ${{ matrix.rustc }}
+          toolchain: stable
 
       - name: "`sccache` ~ install"
         run: cargo install sccache
