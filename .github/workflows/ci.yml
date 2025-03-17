@@ -113,6 +113,11 @@ jobs:
           token = "preshared token"
            ' >  $HOME/.config/sccache/buildserver-config.toml
 
+          echo '
+          RUST_BACKTRACE=full
+          SCCACHE_SYSLOG=debug
+           ' >  $HOME/.config/sccache/sccache.conf
+
           sudo cp $HOME/.config/sccache/* /etc/conf.d/sccache
 
 
@@ -128,12 +133,30 @@ jobs:
           Environment="SCCACHE_SYSLOG=info"
           Environment="SCCACHE_NO_DAEMON=1"
           Environment="RUST_BACKTRACE=1"
-          # EnvironmentFile=/etc/conf.d/sccache/sccache.conf
+          EnvironmentFile=/etc/conf.d/sccache/sccache.conf
           ExecStart=/usr/bin/sccache-dist server --config /etc/conf.d/sccache/buildserver-config.toml --syslog $SCCACHE_SYSLOG
 
           [Install]
           WantedBy=multi-user.target' | sudo tee /etc/systemd/system/sccache-buildserver.service
+
+          echo '
+          [Unit]
+          Description=sccache-dist scheduler
+          Wants=network-online.target
+          After=network-online.target
+
+          [Service]
+          Environment="SCCACHE_SYSLOG=info"
+          Environment="SCCACHE_NO_DAEMON=1"
+          Environment="RUST_BACKTRACE=1"
+          EnvironmentFile=/etc/conf.d/sccache/sccache.conf
+          ExecStart=/usr/bin/sccache-dist scheduler --config /etc/conf.d/sccache/scheduler-config.toml --syslog $SCCACHE_SYSLOG
+
+          [Install]
+          WantedBy=multi-user.target' | sudo tee /etc/systemd/system/sccache-scheduler.service
+
           sudo systemctl daemon-reload
+
 
       - name: Start scheduler
         run: sudo sccache-dist scheduler --config $HOME/.config/sccache/scheduler-config.toml
@@ -142,15 +165,11 @@ jobs:
           SCCACHE_LOG: debug
 
 
-      - name: Start buildserver
-        # run: sccache-dist server --config /etc/conf.d/sccache/buildserver-config.toml
+      - name: "`buildserver` start"
         run: sudo systemctl start sccache-buildserver
-        env:
-          # SCCACHE_NO_DAEMON: 1
-          SCCACHE_LOG: debug
 
 
-      - name: buildserver status
+      - name: "`buildserver` status"
         run: systemctl status sccache-buildserver
 
       - name: Test scheduler
@@ -163,4 +182,7 @@ jobs:
           RUSTC_WRAPPER: sccache
           SCCACHE_LOG: debug
 
+
+      - name: buildserver status
+        run: systemctl status sccache-buildserver
 
