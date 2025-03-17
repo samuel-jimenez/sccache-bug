@@ -19,16 +19,6 @@ jobs:
             rustc: nightly
           - os: ubuntu-24.04
             rustc: stable
-          - os: macos-13
-          - os: macos-14
-          - os: windows-2019
-            rustc: nightly
-          - os: windows-2019
-            rustc: beta
-          - os: windows-2022
-            rustc: nightly
-          - os: windows-2022
-            rustc: beta
     env:
       RUST_BACKTRACE: 1
     steps:
