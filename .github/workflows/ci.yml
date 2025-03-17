@@ -100,7 +100,7 @@ jobs:
           cache_dir = "/tmp/toolchains"
           public_addr = "127.0.0.1:10501"
           bind_address = "0.0.0.0:10501"
-          scheduler_url = "http://127.0.0.1"
+          scheduler_url = "http://127.0.0.1:10500"
 
           [builder]
           type = "docker"
@@ -157,8 +157,6 @@ jobs:
 
           sudo systemctl daemon-reload
 
-      - name: "ip"
-        run: ip a
 
       - name: Start scheduler
         run: sudo sccache-dist scheduler --config $HOME/.config/sccache/scheduler-config.toml
@@ -176,6 +174,16 @@ jobs:
 
       - name: Test scheduler
         run: sccache --show-stats && sccache --dist-status
+
+
+      - name: "ip"
+        run: ip a
+
+      - name: "ping"
+        run: ping host.docker.internal
+
+      - name: "curl"
+        run: curl host.docker.internal
 
 
       - name: Build
