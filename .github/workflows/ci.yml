@@ -150,6 +150,9 @@ jobs:
           SCCACHE_LOG: debug
 
 
+      - name: buildserver status
+        run: systemctl status sccache-buildserver
+
       - name: Test scheduler
         run: sccache --show-stats && sccache --dist-status
 
