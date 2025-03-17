@@ -25,6 +25,16 @@ jobs:
         with:
           toolchain: ${{ matrix.rustc }}
 
+      - name: "`sccache` ~ cached"
+        uses: actions/cache@v4
+        id: cache
+        with:
+          path: |
+            /usr/bin/sccache
+            /usr/bin/sccache-dist
+          key: ${{ runner.os }}-${{ matrix.rustc }}-sccache
+
+
 
       - name: "`sccache` ~ config"
         run: ./.github/conf.sh
@@ -34,6 +44,7 @@ jobs:
 
 
       - name: "`sccache` ~ install"
+        if: steps.cache.outputs.cache-hit != 'true'
         run: |
           git clone $SCCACHE_URL
           cd sccache
