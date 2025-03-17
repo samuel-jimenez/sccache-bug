@@ -59,6 +59,13 @@ jobs:
           SCCACHE_DIST_FILE: sccache-dist
 
 
+      - name: "`sccache` ~ save"
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            /usr/bin/sccache
+            /usr/bin/sccache-dist
+          key: ${{ steps.cache.outputs.cache-primary-key }}
 
       - name: "`bwrap` ~ install"
         run: sudo apt install -y --no-install-recommends bubblewrap
