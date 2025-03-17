@@ -62,7 +62,7 @@ jobs:
 
 
       - name: "`bwrap` ~ install"
-        run: sudo apt install -y --no-install-recommends bwrap
+        run: sudo apt install -y --no-install-recommends bubblewrap
 
       - name: "which bwrap"
         run: which bwrap
