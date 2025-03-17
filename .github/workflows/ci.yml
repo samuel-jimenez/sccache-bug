@@ -10,8 +10,8 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-24.04]
-        rustc: [stable, beta, nightly]
+        os: [ubuntu-24.04]
+        rustc: [stable]
         buildserver: [overlay, docker]
     env:
       RUST_BACKTRACE: 1
@@ -161,6 +161,8 @@ jobs:
           [Install]
           WantedBy=multi-user.target' | sudo tee /etc/systemd/system/sccache-scheduler.service
 
+
+          ls -la /etc/systemd/system
           sudo systemctl daemon-reload
 
 
