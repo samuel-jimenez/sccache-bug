@@ -70,6 +70,11 @@ jobs:
         run: systemctl status sccache-scheduler
 
 
+      - name: "`buildserver` start"
+        run: |
+          sudo systemctl start sccache-buildserver-${{ matrix.buildserver }}
+          systemctl status sccache-buildserver-${{ matrix.buildserver }}
+
 
       - name: "`buildserver` start"
         run: sudo systemctl start sccache-buildserver-${{ matrix.buildserver }}
