@@ -132,7 +132,7 @@ jobs:
           ExecStart=/usr/bin/sccache-dist server --config /etc/conf.d/sccache/buildserver-config.toml --syslog $SCCACHE_SYSLOG
 
           [Install]
-          WantedBy=multi-user.target' >  /etc/systemd/system/sccache-buildserver.service
+          WantedBy=multi-user.target' | sudo tee /etc/systemd/system/sccache-buildserver.service
           sudo systemctl daemon-reload
 
       - name: Start scheduler
