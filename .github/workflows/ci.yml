@@ -118,7 +118,7 @@ jobs:
 
 
       - name: Start buildserver
-        run: sudo sccache-dist server --config $HOME/.config/sccache/buildserver-config.toml
+        run: sudo ./sccache-dist server --config $HOME/.config/sccache/buildserver-config.toml
         env:
           # SCCACHE_NO_DAEMON: 1
           SCCACHE_LOG: debug
