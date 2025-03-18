@@ -33,7 +33,6 @@ token = "preshared token"
 echo '
 cache_dir = "/tmp/toolchains"
 public_addr = "127.0.0.1:10501"
-bind_address = "0.0.0.0:10501"
 scheduler_url = "http://127.0.0.1:10500"
 
 [builder]
