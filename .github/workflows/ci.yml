@@ -152,6 +152,9 @@ jobs:
           RUSTC_WRAPPER: sccache
           SCCACHE_LOG: debug
 
+      - name: "`docker` ~ list"
+        if: ${{ always() && contains(matrix.buildserver, 'docker') }}
+        run: docker ps -a
 
       - name: "`buildserver` ~ status"
         if: always()
@@ -172,3 +175,49 @@ jobs:
       - name: "`sccache` ~ show log"
         if: always()
         run: cat $HOME/.config/sccache/sccache.log.txt
+
+      - name: "artifact logs"
+        if: always()
+        run: ls -la /home/runner/work/sccache-bug/sccache-bug/target/release/deps/
+
+      - name: "memory"
+        if: always()
+        run: free -h
+
+      - name: "`docker` ~ list"
+        if: ${{ always() && contains(matrix.buildserver, 'docker') }}
+        run: docker ps -a
+      - name: "`docker` ~ list"
+        if: ${{ always() && contains(matrix.buildserver, 'docker') }}
+        run: docker ps -aq
+
+
+      - name: "`docker` ~ "
+        if: ${{ always() && contains(matrix.buildserver, 'docker') }}
+        timeout-minutes: 2
+        # run: docker logs $(docker ps -aq)
+        run: systemctl status docker
+
+
+
+
+      - name: "`docker` ~ log"
+        if: ${{ always() && contains(matrix.buildserver, 'docker') }}
+        timeout-minutes: 2
+        # run: docker logs $(docker ps -aq)
+        run: |
+          CONT_ID=$(docker ps -aq)
+          echo $CONT_ID
+          docker logs $CONT_ID --since "10m"
+
+
+
+      - name: "`docker` ~ log"
+        if: ${{ always() && contains(matrix.buildserver, 'docker') }}
+        timeout-minutes: 2
+        # run: docker logs $(docker ps -aq)
+        run: |
+          CONT_ID=$(docker ps -aq)
+          echo $CONT_ID
+          docker logs $CONT_ID
+
