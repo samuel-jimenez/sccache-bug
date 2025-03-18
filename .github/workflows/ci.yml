@@ -166,6 +166,7 @@ jobs:
 
 
 
+
       - name: "`buildserver` ~ status"
         if: always()
         run: systemctl status sccache-buildserver
@@ -173,3 +174,12 @@ jobs:
       - name: "`sccache` ~ dist status"
         if: always()
         run: sccache --show-stats && sccache --dist-status
+
+
+      - name: "`scheduler` ~ status"
+        if: always()
+        run: journalctl -eu sccache-scheduler
+
+      - name: "`buildserver` ~ status"
+        if: always()
+        run: journalctl -eu sccache-buildserver
