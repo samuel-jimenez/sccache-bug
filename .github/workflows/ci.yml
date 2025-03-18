@@ -1,7 +1,52 @@
 name: ci
 on: [ push, pull_request ]
 
+env:
+  SCCACHE_DIR: sccache/target/release
+  SCCACHE_FILE: sccache
+  SCCACHE_DIST_FILE: sccache-dist
+
 jobs:
+
+  sccache:
+    name: sccache
+    runs-on: ubuntu-22.04
+    continue-on-error: false
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+    env:
+      RUST_BACKTRACE: 1
+    steps:
+      - uses: ilammy/msvc-dev-cmd@v1
+
+      - name: "`rust` ~ install"
+        uses: ./.github/actions/rust-toolchain
+        with:
+          toolchain: ${{ matrix.rustc }}
+
+      - name: "`sccache` ~ cached"
+        uses: actions/cache@v4
+        id: cache
+        with:
+          path: |
+            ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_FILE }}
+            ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_DIST_FILE }}
+          key: ${{ runner.os }}-sccache
+          # key: ${{ runner.os }}-${{ matrix.rustc }}-sccache
+          # key: ${{ matrix.os }}-${{ matrix.rustc }}-sccache
+
+      - name: "`sccache` ~ install"
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          git clone $SCCACHE_URL
+          cd sccache
+          cargo build --locked --release --features=dist-server
+        env:
+          SCCACHE_URL: https://github.com/mozilla/sccache.git
+
+
+
   test:
     name: test ${{ matrix.os }} rust ${{ matrix.rustc || 'stable' }} ${{ matrix.buildserver }}
     runs-on: ${{ matrix.os }}
@@ -35,9 +80,18 @@ jobs:
           path: |
             ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_FILE }}
             ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_DIST_FILE }}
-          key: ${{ runner.os }}-${{ matrix.rustc }}-sccache
+          key: ${{ runner.os }}-sccache
+          # key: ${{ runner.os }}-${{ matrix.rustc }}-sccache
           # key: ${{ matrix.os }}-${{ matrix.rustc }}-sccache
 
+
+      - name: "`sccache` ~ install"
+        run: sudo cp $SCCACHE_DIR/$SCCACHE_FILE $SCCACHE_DIR/$SCCACHE_DIST_FILE $BIN_DIR
+        env:
+          BIN_DIR: /usr/bin
+
+      - name: "`bwrap` ~ install"
+        run: sudo apt install -y --no-install-recommends bubblewrap
 
 
       - name: "`sccache` ~ config"
@@ -45,36 +99,6 @@ jobs:
 
       - name: "`systemd` ~ config"
         run: ./.github/systemd.sh
-
-
-      - name: "`sccache` ~ install"
-        if: steps.cache.outputs.cache-hit != 'true'
-        run: |
-          git clone $SCCACHE_URL
-          cd sccache
-          cargo build --locked --release --features=dist-server
-        env:
-          SCCACHE_URL: https://github.com/mozilla/sccache.git
-
-
-      - name: "`sccache` ~ save"
-        uses: actions/cache/save@v4
-        with:
-          path: |
-            ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_FILE }}
-            ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_DIST_FILE }}
-          key: ${{ steps.cache.outputs.cache-primary-key }}
-
-      - name: "`sccache` ~ install"
-        run: sudo cp $SCCACHE_DIR/$SCCACHE_FILE $SCCACHE_DIR/$SCCACHE_DIST_FILE $BIN_DIR
-        env:
-          BIN_DIR: /usr/bin
-
-
-      - name: "`bwrap` ~ install"
-        run: sudo apt install -y --no-install-recommends bubblewrap
-
-
 
       - name: "`scheduler` start"
         run: sudo systemctl start sccache-scheduler
