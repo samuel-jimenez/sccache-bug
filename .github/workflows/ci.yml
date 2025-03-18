@@ -146,6 +146,8 @@ jobs:
           RUSTC_WRAPPER: sccache
           SCCACHE_LOG: debug
 
+      - name: "`docker` ~ list"
+        run: docker container list
 
       - name: "`buildserver` ~ status"
         if: always()
