@@ -132,8 +132,13 @@ jobs:
       - name: "`buildserver` ~ status"
         run: systemctl status sccache-buildserver-${{ matrix.buildserver }}
 
+      - name: "`sccache` ~ log"
+        run:           SCCACHE_ERROR_LOG=$HOME/.config/sccache/sccache.log.txt sccache --start-server
+        env:
+          SCCACHE_NO_DAEMON: 1
+          SCCACHE_LOG: trace,hyper=off,tokio_util=info
 
-      - name: "`scheduler` ~ test"
+      - name: "`sccache` ~ dist status"
         run: sccache --show-stats && sccache --dist-status
 
 
@@ -163,3 +168,7 @@ jobs:
       - name: "`buildserver` ~ journal"
         if: always()
         run: journalctl -eu sccache-buildserver-${{ matrix.buildserver }}
+
+      - name: "`sccache` ~ show log"
+        if: always()
+        run: cat $HOME/.config/sccache/sccache.log.txt
