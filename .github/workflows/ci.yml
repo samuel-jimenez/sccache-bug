@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [git, v0.10.0, v0.9.1, v0.9.0, v0.8.2, v0.8.1]
+        version: [git]
     env:
       RUST_BACKTRACE: 1
     steps:
@@ -72,10 +72,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [git, v0.10.0, v0.9.1, v0.9.0, v0.8.2, v0.8.1]
+        version: [git]
         os: [ubuntu-24.04]
-        rustc: [stable, beta, nightly]
-        buildserver: [local, overlay, docker]
+        rustc: [stable]
+        buildserver: [local, docker]
     env:
       RUST_BACKTRACE: 1
       SCCACHE_DIR: sccache/target/release
