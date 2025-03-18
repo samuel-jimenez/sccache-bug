@@ -14,6 +14,8 @@ jobs:
     timeout-minutes: 30
     strategy:
       fail-fast: false
+      matrix:
+        version: [git, v0.10.0, v0.9.1, v0.9.0, v0.8.2, v0.8.1]
     env:
       RUST_BACKTRACE: 1
     steps:
@@ -32,19 +34,37 @@ jobs:
           path: |
             ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_FILE }}
             ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_DIST_FILE }}
-          key: ${{ runner.os }}-sccache
+          key: sccache-${{ matrix.version }}-${{ runner.os }}
 
-      - name: "`sccache` ~ install"
-        if: steps.cache.outputs.cache-hit != 'true'
+      - name: "`sccache` ~ install (git)"
+        if: steps.cache.outputs.cache-hit != 'true' && contains(matrix.version, 'git')
         run: |
+          echo ${{ matrix.version }}
           git clone $SCCACHE_URL
           cd sccache
           cargo build --locked --release --features=dist-server
         env:
           SCCACHE_URL: https://github.com/mozilla/sccache.git
 
+
+      - name: "`sccache` ~ install (bin)"
+        if: steps.cache.outputs.cache-hit != 'true' && !contains(matrix.version, 'git')
+        run: |
+          curl $SCCACHE_URL -Lo $SCCACHE_ARCHIVE
+          curl $SCCACHE_DIST_URL -Lo $SCCACHE_DIST_ARCHIVE
+          tar -xvf $SCCACHE_ARCHIVE
+          tar -xvf $SCCACHE_DIST_ARCHIVE
+          mv $SCCACHE_ARCHIVE_DIR/$SCCACHE_FILE $SCCACHE_DIST_ARCHIVE_DIR/$SCCACHE_DIST_FILE $SCCACHE_DIR
+        env:
+          SCCACHE_URL: https://github.com/mozilla/sccache/releases/download/${{ matrix.version }}/sccache-${{ matrix.version }}-x86_64-unknown-linux-musl.tar.gz
+          SCCACHE_DIST_URL: https://github.com/mozilla/sccache/releases/download/${{ matrix.version }}/sccache-dist-${{ matrix.version }}-x86_64-unknown-linux-musl.tar.gz
+          SCCACHE_ARCHIVE: sccache.tar.gz
+          SCCACHE_DIST_ARCHIVE: sccache-dist.tar.gz
+          SCCACHE_ARCHIVE_DIR: sccache-${{ matrix.version }}-x86_64-unknown-linux-musl
+          SCCACHE_DIST_ARCHIVE_DIR: sccache-dist-${{ matrix.version }}-x86_64-unknown-linux-musl
+
   test:
-    name: test ${{ matrix.os }} rust ${{ matrix.rustc || 'stable' }} ${{ matrix.buildserver }}
+    name: test ${{ matrix.version }} ${{ matrix.os }} rust ${{ matrix.rustc || 'stable' }} ${{ matrix.buildserver }}
     runs-on: ${{ matrix.os }}
     needs: sccache
     continue-on-error: true
@@ -52,6 +72,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
+        version: [git, v0.10.0, v0.9.1, v0.9.0, v0.8.2, v0.8.1]
         os: [ubuntu-24.04]
         rustc: [stable, beta, nightly]
         buildserver: [local, overlay, docker]
@@ -71,13 +92,14 @@ jobs:
           toolchain: ${{ matrix.rustc }}
 
       - name: "`sccache` ~ cached"
-        uses: actions/cache@v4
+        uses: actions/cache/restore@v4
         id: cache
         with:
           path: |
             ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_FILE }}
             ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_DIST_FILE }}
-          key: ${{ runner.os }}-sccache
+          key: sccache-${{ matrix.version }}-${{ runner.os }}
+          fail-on-cache-miss: true
 
 
       - name: "`sccache` ~ install"
