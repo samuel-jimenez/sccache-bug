@@ -117,23 +117,23 @@ jobs:
       - name: "`systemd` ~ config"
         run: ./.github/systemd.sh
 
-      - name: "`scheduler` start"
+      - name: "`scheduler` ~ start"
         run: sudo systemctl start sccache-scheduler
 
 
-      - name: "`scheduler` status"
+      - name: "`scheduler` ~ status"
         run: systemctl status sccache-scheduler
 
 
-      - name: "`buildserver` start"
+      - name: "`buildserver` ~ start"
         run: sudo systemctl start sccache-buildserver-${{ matrix.buildserver }}
 
 
-      - name: "`buildserver` status"
+      - name: "`buildserver` ~ status"
         run: systemctl status sccache-buildserver-${{ matrix.buildserver }}
 
 
-      - name: "`scheduler` test"
+      - name: "`scheduler` ~ test"
         run: sccache --show-stats && sccache --dist-status
 
 
@@ -146,10 +146,10 @@ jobs:
           RUSTC_WRAPPER: sccache
 
 
-      - name: "`buildserver` status"
+      - name: "`buildserver` ~ status"
         if: always()
         run: systemctl status sccache-buildserver-${{ matrix.buildserver }}
 
-      - name: "`scheduler` test"
+      - name: "`sccache` ~ dist status"
         if: always()
         run: sccache --show-stats && sccache --dist-status
