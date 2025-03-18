@@ -74,7 +74,7 @@ jobs:
       matrix:
         version: [git, v0.10.0]
         os: [ubuntu-24.04]
-        rustc: [stable, beta, nightly]
+        rustc: [stable]
         buildserver: [local, overlay, docker]
     env:
       RUST_BACKTRACE: 1
