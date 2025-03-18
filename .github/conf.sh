@@ -5,18 +5,6 @@ sudo mkdir -p /etc/conf.d/sccache
 
 echo '[cache.disk]
 dir = "'"$HOME/.cache/sccache"'"
-[dist]
-# where to find the scheduler
-scheduler_url = "http://127.0.0.1:10500"
-# a set of prepackaged toolchains
-toolchains = []
-# the maximum size of the toolchain cache in bytes
-toolchain_cache_size = 5368709120
-cache_dir = "'"$HOME/.cache/sccache-dist-client"'"
-
-[dist.auth]
-type = "token"
-token = "preshared token"
 ' >  $HOME/.config/sccache/config
 
 echo 'public_addr = "0.0.0.0:10500"
