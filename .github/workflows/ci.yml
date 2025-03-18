@@ -1,168 +1,99 @@
 name: ci
 on: [ push, pull_request ]
 
+env:
+  SCCACHE_DIR: sccache/target/release
+  SCCACHE_FILE: sccache
+  SCCACHE_DIST_FILE: sccache-dist
+
 jobs:
+  sccache:
+    name: sccache
+    runs-on: ubuntu-22.04
+    continue-on-error: false
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+    env:
+      RUST_BACKTRACE: 1
+    steps:
+      - name: Clone repository
+        uses: actions/checkout@v4
+
+      - name: "`rust` ~ install"
+        uses: ./.github/actions/rust-toolchain
+        with:
+          toolchain: ${{ matrix.rustc }}
+
+      - name: "`sccache` ~ cached"
+        uses: actions/cache@v4
+        id: cache
+        with:
+          path: |
+            ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_FILE }}
+            ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_DIST_FILE }}
+          key: ${{ runner.os }}-sccache
+
+      - name: "`sccache` ~ install"
+        if: steps.cache.outputs.cache-hit != 'true'
+        run: |
+          git clone $SCCACHE_URL
+          cd sccache
+          cargo build --locked --release --features=dist-server
+        env:
+          SCCACHE_URL: https://github.com/mozilla/sccache.git
+
   test:
     name: test ${{ matrix.os }} rust ${{ matrix.rustc || 'stable' }} ${{ matrix.buildserver }}
     runs-on: ${{ matrix.os }}
+    needs: sccache
     continue-on-error: true
     timeout-minutes: 30
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-22.04, ubuntu-24.04]
+        os: [ubuntu-24.04]
         rustc: [stable, beta, nightly]
-        buildserver: [overlay, docker]
+        buildserver: [local, overlay, docker]
     env:
       RUST_BACKTRACE: 1
+      SCCACHE_DIR: sccache/target/release
+      SCCACHE_FILE: sccache
+      SCCACHE_DIST_FILE: sccache-dist
     steps:
       - uses: ilammy/msvc-dev-cmd@v1
       - name: Clone repository
         uses: actions/checkout@v4
 
-      - name: Install rust
+      - name: "`rust` ~ install"
         uses: ./.github/actions/rust-toolchain
         with:
           toolchain: ${{ matrix.rustc }}
 
+      - name: "`sccache` ~ cached"
+        uses: actions/cache@v4
+        id: cache
+        with:
+          path: |
+            ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_FILE }}
+            ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_DIST_FILE }}
+          key: ${{ runner.os }}-sccache
+
+
       - name: "`sccache` ~ install"
-        run: |
-          git clone $SCCACHE_URL
-          cd sccache
-          cargo build --locked --release --features=dist-server
-          sudo mv $SCCACHE_DIR/$SCCACHE_FILE $SCCACHE_DIR/$SCCACHE_DIST_FILE $BIN_DIR
+        run: sudo cp $SCCACHE_DIR/$SCCACHE_FILE $SCCACHE_DIR/$SCCACHE_DIST_FILE $BIN_DIR
         env:
-          SCCACHE_URL: https://github.com/mozilla/sccache.git
-          SCCACHE_DIR: target/release
           BIN_DIR: /usr/bin
-          SCCACHE_FILE: sccache
-          SCCACHE_DIST_FILE: sccache-dist
 
       - name: "`bwrap` ~ install"
         run: sudo apt install -y --no-install-recommends bubblewrap
 
+
       - name: "`sccache` ~ config"
-        run: |
-          mkdir -p $HOME/.config/sccache
-          sudo mkdir -p /etc/conf.d/sccache
-          echo '[cache.disk]
-          dir = "'"$HOME/.cache/sccache"'"
-          [dist]
-          # where to find the scheduler
-          scheduler_url = "http://127.0.0.1:10500"
-          # a set of prepackaged toolchains
-          toolchains = []
-          # the maximum size of the toolchain cache in bytes
-          toolchain_cache_size = 5368709120
-          cache_dir = "'"$HOME/.cache/sccache-dist-client"'"
-
-          [dist.auth]
-          type = "token"
-          token = "preshared token"
-          ' >  $HOME/.config/sccache/config
-
-          echo 'public_addr = "0.0.0.0:10500"
-          [client_auth]
-          type = "token"
-          token = "preshared token"
-
-          [server_auth]
-          type = "token"
-          token = "preshared token"
-           ' >  $HOME/.config/sccache/scheduler-config.toml
-
-
-          echo '
-          cache_dir = "/tmp/toolchains"
-          public_addr = "127.0.0.1:10501"
-          bind_address = "0.0.0.0:10501"
-          scheduler_url = "http://127.0.0.1:10500"
-
-          [builder]
-          type = "overlay"
-          build_dir = "/tmp/build"
-          bwrap_path = "/usr/bin/bwrap"
-
-          [scheduler_auth]
-          type = "token"
-          token = "preshared token"
-           ' >  $HOME/.config/sccache/buildserver-config.toml
-
-          echo '
-          cache_dir = "/tmp/toolchains"
-          public_addr = "127.0.0.1:10502"
-          bind_address = "0.0.0.0:10502"
-          scheduler_url = "http://127.0.0.1:10500"
-
-          [builder]
-          type = "docker"
-
-          [scheduler_auth]
-          type = "token"
-          token = "preshared token"
-           ' >  $HOME/.config/sccache/buildserver-docker-config.toml
-
-          echo '
-          RUST_BACKTRACE=full
-          # SCCACHE_SYSLOG=debug
-          SCCACHE_LOG=info,sccache_dist=debug,sccache=debug,sccache_heartbeat=info,sccache_http=info
-           ' >  $HOME/.config/sccache/sccache.conf
-
-          sudo cp $HOME/.config/sccache/* /etc/conf.d/sccache
-
+        run: ./.github/conf.sh
 
       - name: "`systemd` ~ config"
-        run: |
-          echo '
-          [Unit]
-          Description=sccache-dist buildserver
-          Wants=network-online.target
-          After=network-online.target
-
-          [Service]
-          Environment="SCCACHE_SYSLOG=info"
-          Environment="SCCACHE_NO_DAEMON=1"
-          Environment="RUST_BACKTRACE=1"
-          EnvironmentFile=/etc/conf.d/sccache/sccache.conf
-          ExecStart=/usr/bin/sccache-dist server --config /etc/conf.d/sccache/buildserver-config.toml --syslog $SCCACHE_SYSLOG
-
-          [Install]
-          WantedBy=multi-user.target' | sudo tee /etc/systemd/system/sccache-buildserver-overlay.service
-
-          echo '
-          [Unit]
-          Description=sccache-dist buildserver
-          Wants=network-online.target
-          After=network-online.target
-
-          [Service]
-          Environment="SCCACHE_SYSLOG=info"
-          Environment="SCCACHE_NO_DAEMON=1"
-          Environment="RUST_BACKTRACE=1"
-          EnvironmentFile=/etc/conf.d/sccache/sccache.conf
-          ExecStart=/usr/bin/sccache-dist server --config /etc/conf.d/sccache/buildserver-docker-config.toml --syslog $SCCACHE_SYSLOG
-
-          [Install]
-          WantedBy=multi-user.target' | sudo tee /etc/systemd/system/sccache-buildserver-docker.service
-
-          echo '
-          [Unit]
-          Description=sccache-dist scheduler
-          Wants=network-online.target
-          After=network-online.target
-
-          [Service]
-          Environment="SCCACHE_SYSLOG=info"
-          Environment="SCCACHE_NO_DAEMON=1"
-          Environment="RUST_BACKTRACE=1"
-          EnvironmentFile=/etc/conf.d/sccache/sccache.conf
-          ExecStart=/usr/bin/sccache-dist scheduler --config /etc/conf.d/sccache/scheduler-config.toml --syslog $SCCACHE_SYSLOG
-
-          [Install]
-          WantedBy=multi-user.target' | sudo tee /etc/systemd/system/sccache-scheduler.service
-
-          sudo systemctl daemon-reload
-
+        run: ./.github/systemd.sh
 
       - name: "`scheduler` start"
         run: sudo systemctl start sccache-scheduler
@@ -172,7 +103,6 @@ jobs:
         run: systemctl status sccache-scheduler
 
 
-
       - name: "`buildserver` start"
         run: sudo systemctl start sccache-buildserver-${{ matrix.buildserver }}
 
@@ -180,29 +110,24 @@ jobs:
       - name: "`buildserver` status"
         run: systemctl status sccache-buildserver-${{ matrix.buildserver }}
 
-      - name: Test scheduler
+
+      - name: "`scheduler` test"
         run: sccache --show-stats && sccache --dist-status
 
 
-      - name: Clean
+      - name: "Clean"
         run: cargo clean
 
-      - name: Build
-        run: cargo build --locked --release
-
-
-      - name: Clean
-        run: cargo clean
-
-      - name: Build Sccache
+      - name: "Build"
         run: cargo build --locked --release
         env:
           RUSTC_WRAPPER: sccache
 
 
       - name: "`buildserver` status"
+        if: always()
         run: systemctl status sccache-buildserver-${{ matrix.buildserver }}
 
-
-
-
+      - name: "`scheduler` test"
+        if: always()
+        run: sccache --show-stats && sccache --dist-status
