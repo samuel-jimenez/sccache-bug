@@ -16,13 +16,7 @@ jobs:
       fail-fast: false
       matrix:
         version: [git, v0.10.0, v0.9.1, v0.9.0, v0.8.2, v0.8.1]
-        include:
-          - version: git
-            rustc: stable
-          - version: git
-            rustc: beta
-          - version: git
-            rustc: nightly
+        rustc: [stable, beta, nightly]
     env:
       RUST_BACKTRACE: 1
     steps:
