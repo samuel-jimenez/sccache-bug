@@ -16,6 +16,9 @@ jobs:
       fail-fast: false
       matrix:
         version: [git, v0.10.0, v0.9.1, v0.9.0, v0.8.2, v0.8.1]
+        include:
+          - version: git
+            rustc: [stable, beta, nightly]
     env:
       RUST_BACKTRACE: 1
     steps:
@@ -30,11 +33,23 @@ jobs:
       - name: "`sccache` ~ cached"
         uses: actions/cache@v4
         id: cache
+        if: ${{ !contains(matrix.version, 'git') }}
         with:
           path: |
             ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_FILE }}
             ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_DIST_FILE }}
           key: sccache-${{ matrix.version }}-${{ runner.os }}
+
+      - name: "`sccache` ~ cached"
+        uses: actions/cache@v4
+        id: cache
+        if: ${{ contains(matrix.version, 'git') }}
+        with:
+          path: |
+            ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_FILE }}
+            ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_DIST_FILE }}
+          key: sccache-${{ matrix.rustc }}-${{ runner.os }}
+          # key: sccache-${{ matrix.version }}-${{ matrix.rustc }}-${{ runner.os }}
 
       - name: "`sccache` ~ install (git)"
         if: steps.cache.outputs.cache-hit != 'true' && contains(matrix.version, 'git')
@@ -93,12 +108,25 @@ jobs:
 
       - name: "`sccache` ~ cached"
         uses: actions/cache/restore@v4
+        if: ${{ !contains(matrix.version, 'git') }}
         id: cache
         with:
           path: |
             ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_FILE }}
             ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_DIST_FILE }}
           key: sccache-${{ matrix.version }}-${{ runner.os }}
+          # key: sccache-${{ matrix.version }}-${{ matrix.rustc }}-${{ runner.os }}
+          fail-on-cache-miss: true
+
+      - name: "`sccache` ~ cached"
+        uses: actions/cache/restore@v4
+        if: ${{ contains(matrix.version, 'git') }}
+        id: cache
+        with:
+          path: |
+            ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_FILE }}
+            ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_DIST_FILE }}
+          key: sccache-${{ matrix.rustc }}-${{ runner.os }}
           fail-on-cache-miss: true
 
 
