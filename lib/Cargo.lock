@@ -3,12 +3,5 @@
 version = 4
 
 [[package]]
-name = "sccache-cdy"
-version = "0.1.0"
-dependencies = [
- "test-lib",
-]
-
-[[package]]
 name = "test-lib"
 version = "0.1.0"
