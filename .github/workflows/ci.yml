@@ -72,7 +72,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        version: [git, v0.10.0, v0.9.1, v0.9.0, v0.8.2, v0.8.1]
+        version: [git, v0.10.0]
         os: [ubuntu-24.04]
         rustc: [stable, beta, nightly]
         buildserver: [local, overlay, docker]
