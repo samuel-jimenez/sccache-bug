@@ -165,6 +165,11 @@ jobs:
           SCCACHE_LOG: debug
 
 
-      - name: buildserver status
+
+      - name: "`buildserver` ~ status"
+        if: always()
         run: systemctl status sccache-buildserver
 
+      - name: "`sccache` ~ dist status"
+        if: always()
+        run: sccache --show-stats && sccache --dist-status
