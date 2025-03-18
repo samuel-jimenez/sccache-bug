@@ -50,6 +50,7 @@ jobs:
   test:
     name: test ${{ matrix.os }} rust ${{ matrix.rustc || 'stable' }} ${{ matrix.buildserver }}
     runs-on: ${{ matrix.os }}
+    needs: sccache
     continue-on-error: true
     timeout-minutes: 30
     strategy:
