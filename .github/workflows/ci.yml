@@ -153,3 +153,11 @@ jobs:
       - name: "`sccache` ~ dist status"
         if: always()
         run: sccache --show-stats && sccache --dist-status
+
+      - name: "`scheduler` ~ journal"
+        if: always()
+        run: journalctl -eu sccache-scheduler
+
+      - name: "`buildserver` ~ journal"
+        if: always()
+        run: journalctl -eu sccache-buildserver-${{ matrix.buildserver }}
