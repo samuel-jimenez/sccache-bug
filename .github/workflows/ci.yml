@@ -30,13 +30,11 @@ jobs:
 
 
 
-      - name: "`sccache` ~ cached"
-        uses: actions/cache@v4
+      - name: "`sccache` ~ cache key"
         if: ${{ !contains(matrix.version, 'git') }}
         run: echo "CACHE_KEY=sccache-${{ matrix.version }}-${{ runner.os }}" >> $GITHUB_ENV
 
-      - name: "`sccache` ~ cached"
-        uses: actions/cache@v4
+      - name: "`sccache` ~ cache key"
         if: ${{ contains(matrix.version, 'git') }}
         run: echo "CACHE_KEY=sccache-${{ matrix.rustc }}-${{ runner.os }}" >> $GITHUB_ENV
 
