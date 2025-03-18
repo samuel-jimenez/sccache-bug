@@ -1,0 +1,12 @@
+[Unit]
+Description=sccache-dist buildserver
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStart=/bin/bash
+
+[Install]
+WantedBy=multi-user.target
