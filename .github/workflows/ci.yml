@@ -64,7 +64,7 @@ jobs:
           SCCACHE_DIST_ARCHIVE_DIR: sccache-dist-${{ matrix.version }}-x86_64-unknown-linux-musl
 
   test:
-    name: test ${{ matrix.version }} ${{ matrix.os }} rust ${{ matrix.rustc || 'stable' }} ${{ matrix.buildserver }}
+    name: sccache-${{ matrix.version }} ${{ matrix.os }} rust-${{ matrix.rustc || 'stable' }} ${{ matrix.buildserver }}
     runs-on: ${{ matrix.os }}
     needs: sccache
     continue-on-error: true
