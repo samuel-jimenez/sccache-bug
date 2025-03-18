@@ -2,7 +2,7 @@ name: ci
 on: [ push, pull_request ]
 
 env:
-  SCCACHE_DIR: sccache/target/release
+  SCCACHE_BIN_DIR: sccache/target/release
   SCCACHE_FILE: sccache
   SCCACHE_DIST_FILE: sccache-dist
 
@@ -32,8 +32,8 @@ jobs:
         id: cache
         with:
           path: |
-            ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_FILE }}
-            ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_DIST_FILE }}
+            ${{ env.SCCACHE_BIN_DIR }}/${{ env.SCCACHE_FILE }}
+            ${{ env.SCCACHE_BIN_DIR }}/${{ env.SCCACHE_DIST_FILE }}
           key: sccache-${{ matrix.version }}-${{ runner.os }}
 
       - name: "`sccache` ~ install (git)"
@@ -54,7 +54,7 @@ jobs:
           curl $SCCACHE_DIST_URL -Lo $SCCACHE_DIST_ARCHIVE
           tar -xvf $SCCACHE_ARCHIVE
           tar -xvf $SCCACHE_DIST_ARCHIVE
-          mv $SCCACHE_ARCHIVE_DIR/$SCCACHE_FILE $SCCACHE_DIST_ARCHIVE_DIR/$SCCACHE_DIST_FILE $SCCACHE_DIR
+          mv $SCCACHE_ARCHIVE_DIR/$SCCACHE_FILE $SCCACHE_DIST_ARCHIVE_DIR/$SCCACHE_DIST_FILE $SCCACHE_BIN_DIR
         env:
           SCCACHE_URL: https://github.com/mozilla/sccache/releases/download/${{ matrix.version }}/sccache-${{ matrix.version }}-x86_64-unknown-linux-musl.tar.gz
           SCCACHE_DIST_URL: https://github.com/mozilla/sccache/releases/download/${{ matrix.version }}/sccache-dist-${{ matrix.version }}-x86_64-unknown-linux-musl.tar.gz
@@ -78,7 +78,7 @@ jobs:
         buildserver: [local, overlay, docker]
     env:
       RUST_BACKTRACE: 1
-      SCCACHE_DIR: sccache/target/release
+      SCCACHE_BIN_DIR: sccache/target/release
       SCCACHE_FILE: sccache
       SCCACHE_DIST_FILE: sccache-dist
     steps:
@@ -96,14 +96,14 @@ jobs:
         id: cache
         with:
           path: |
-            ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_FILE }}
-            ${{ env.SCCACHE_DIR }}/${{ env.SCCACHE_DIST_FILE }}
+            ${{ env.SCCACHE_BIN_DIR }}/${{ env.SCCACHE_FILE }}
+            ${{ env.SCCACHE_BIN_DIR }}/${{ env.SCCACHE_DIST_FILE }}
           key: sccache-${{ matrix.version }}-${{ runner.os }}
           fail-on-cache-miss: true
 
 
       - name: "`sccache` ~ install"
-        run: sudo cp $SCCACHE_DIR/$SCCACHE_FILE $SCCACHE_DIR/$SCCACHE_DIST_FILE $BIN_DIR
+        run: sudo cp $SCCACHE_BIN_DIR/$SCCACHE_FILE $SCCACHE_BIN_DIR/$SCCACHE_DIST_FILE $BIN_DIR
         env:
           BIN_DIR: /usr/bin
 
