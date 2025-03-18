@@ -61,7 +61,7 @@ token = "preshared token"
 echo '
 RUST_BACKTRACE=full
 # SCCACHE_SYSLOG=debug
-SCCACHE_LOG=info,sccache_dist=debug,sccache=debug,sccache_heartbeat=info,sccache_http=info
+SCCACHE_LOG=info,sccache_dist=trace,sccache=trace,sccache_heartbeat=info,sccache_http=info
 ' >  $HOME/.config/sccache/sccache.conf
 
 sudo cp $HOME/.config/sccache/* /etc/conf.d/sccache
